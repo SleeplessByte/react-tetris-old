@@ -1,0 +1,83 @@
+##
+# Circle CI configuration
+# https://circleci.com/docs/configuration/
+#
+# For quick reference:
+#
+# machine: adjusting the VM to your preferences and requirements
+# checkout: checking out and cloning your git repo
+# dependencies: setting up your project’s language-specific dependencies
+# database: preparing the databases for your tests
+# test: running your tests
+# deployment: deploying your code to your web servers
+#
+
+##
+# Save coverage as an artifact in Circle CI
+#
+general:
+  artifacts:
+    - "coverage"
+
+##
+# Ensure the current VM is on par with our deployment servers.
+# - Ensure we run a specific node version
+# - Ensure code climate is set up
+#
+machine:
+  node:
+    version: 6.9.1
+  environment:
+    CODECLIMATE_REPO_TOKEN: $CODECLIMATE_REPO_TOKEN
+    PATH: "${PATH}:${HOME}/${CIRCLE_PROJECT_REPONAME}/node_modules/.bin"
+
+##
+# Cache yarn and make sure it is loaded
+#
+# Caching directories is not available before this step and the directory has
+# to be there when this step finishes.
+#
+dependencies:
+  cache_directories:
+    - ~/.cache/yarn
+  override:
+    - yarn
+
+##
+# This should run all the tests for Circle CI.
+#
+# - yarn run clean rimrafs the old build
+# - yarn run build:test:cli will do a cli build with the test env
+# - yarn run test:cli runs the tests with coverage
+# - yarn run coverage reports to Code Climate
+#
+test:
+  pre:
+    - yarn run clean
+    - yarn run build:test:cli
+  override:
+    - yarn run test:cli
+  post:
+    - yarn run coverage
+
+##
+# Deploy the application to staging or production on successful (green) build.
+deployment:
+  develop:
+    branch: develop
+    commands:
+      - yarn run clean
+      - yarn run build:dev:cli
+      - aws s3 sync dist s3://react-tetris-develop --delete --acl public-read
+  staging:
+    branch: [/release.*/, /hotfix.*/]
+    commands:
+      - yarn run clean
+      - yarn run build:cli
+      - aws s3 sync dist s3://react-tetris-staging --delete --acl public-read
+  master:
+    branch: master
+    commands:
+      - yarn run clean
+      - yarn run build:cli
+      - aws s3 sync dist s3://react-tetris-production --delete --acl public-read

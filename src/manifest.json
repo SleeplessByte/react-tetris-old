@@ -1,0 +1,10 @@
+{
+  "name": "React Tetris",
+  "short_name": "React Tetris",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#9a0000",
+  "theme_color": "#9a0000",
+  "icons": []
+}

@@ -1,0 +1,19 @@
+{
+  "presets": [
+    [
+      "env",
+      {
+        "es2015": {
+          "loose": true,
+          "modules": "commonjs"
+        }
+      }
+    ]
+  ],
+  "plugins": [
+    [
+      "transform-runtime",
+      "syntax-dynamic-import"
+    ]
+  ]
+}

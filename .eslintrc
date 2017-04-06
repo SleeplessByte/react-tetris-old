@@ -1,0 +1,81 @@
+{
+  /*
+    Code Climate Supports (level 3)
+    ===============================
+    babel-eslint
+  */
+
+  "parser": "babel-eslint",
+
+  /*
+    Code Climate Supports (level 3)
+    ===============================
+    eslint-config-airbnb-base
+    eslint-config-angular
+    eslint-config-ember
+    eslint-config-google
+    eslint-config-hapi
+    eslint-config-standard
+    eslint-config-standard-jsx
+    eslint-config-standard-react
+  */
+  "extends": [
+    "standard",
+    "standard-jsx",
+    "standard-react",
+    "plugin:jsx-a11y/recommended",
+    "plugin:promise/recommended",
+    "plugin:react/recommended"
+  ],
+
+  /*
+    Code Climate Supports (level 3)
+    ===============================
+    eslint-plugin-angular
+    eslint-plugin-babel
+    eslint-plugin-ember-suave
+    eslint-plugin-flowtype
+    eslint-plugin-hapi
+    eslint-plugin-import
+    eslint-plugin-jsdoc
+    eslint-plugin-jsx-a11y
+    eslint-plugin-lodash
+    eslint-plugin-mocha
+    eslint-plugin-mongodb
+    eslint-plugin-promise
+    eslint-plugin-react
+    eslint-plugin-security
+    standard
+    */
+  "plugins": [
+    "babel",
+    "react",
+    "promise",
+    "jsx-a11y"
+  ],
+
+  "env": {
+    "browser" : true,
+    "es6": true,
+    "serviceworker": true
+  },
+
+  "globals": {
+    "__DEV__"      : false,
+    "__TEST__"     : false,
+    "__PROD__"     : false
+  },
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "rules": {
+    "key-spacing"          : 0,
+    "jsx-quotes"           : [2, "prefer-single"],
+    "max-len"              : [2, 140, 2],
+    "object-curly-spacing" : [2, "always"],
+
+    "no-use-before-define": [2]
+  }
+}

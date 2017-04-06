@@ -1,0 +1,12 @@
+{
+  "reporter": [
+    "lcov",
+    "html",
+    "text-summary"
+  ],
+  "include": [
+    "src/**/*"
+  ],
+  "sourceMap": false,
+  "instrument": false
+}

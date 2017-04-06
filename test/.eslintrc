@@ -1,0 +1,17 @@
+{
+  "extends": "../.eslintrc",
+
+  "env": {
+    "browser" : false,
+    "node": true,
+    "mocha": true
+  },
+
+  "globals" : {
+    "assert" : false
+  },
+
+  "rules": {
+    "no-unused-expressions": 0
+  }
+}

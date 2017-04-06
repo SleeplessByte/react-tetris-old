@@ -1,0 +1,21 @@
+{
+  "presets": [
+    [
+      "env",
+      {
+        "es2015": {
+          "loose": true,
+          "modules": false
+        }
+      }
+    ],
+    "react"
+  ],
+  "plugins": [
+    [
+      "react-hot-loader/babel",
+      "transform-runtime",
+      "syntax-dynamic-import"
+    ]
+  ]
+}

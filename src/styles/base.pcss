@@ -1,0 +1,217 @@
+/* The text-size-adjust declarations prevent certain mobile browsers from automatically zooming fonts.
+// Importantly this ensures iOS Safari matches the page width to wider landscape viewports instead of
+// zooming everything. Unlike none, a value of 100% allows users to still pinch-zoom. */
+html {
+  -ms-text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+
+  box-sizing: border-box;
+  font: 10px/1 var(--noto) sans-serif;
+
+  height: 100vh;
+}
+
+/* Often undesired page margins are removed. The default font size can vary between browsers; normalize
+// this to a legible base size suited to your chosen main font, which should replace sans-serif.
+// A line-height of 1 resets inconsistent browser interpretations of the default normal to a more robust
+// base value that will not cause undesired spacing. */
+body {
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  -webkit-touch-callout: none;
+
+  font-family: var(--noto);
+  font-size: 1.6rem;
+  margin: 0;
+
+  height: 100vh;
+}
+
+:global #root {
+  height: 100vh;
+  overflow: hidden;
+  background: #f9f9f9;
+}
+
+/* Here we head into reset territory. Stripping the margin and padding from these core elements brings
+// them to the same predictable blank slate as div, section and article. The vast majority of the time
+// you style these elements you want either a 0 value or something very specific. You will override 0 a
+// lot less than an arbitrary value such as 1em. */
+a, abbr, address, article, aside, audio, b, blockquote, body, caption, cite,
+code, dd, del, dfn, dialog, div, dl, dt, em, fieldset, figure, footer, form, h1,
+h2, h3, h4, h5, h6, header, hgroup, hr, html, i, iframe, img, ins, kbd, label,
+legend, li, mark, menu, nav, object, ol, p, pre, q, samp, section, small, span,
+strong, sub, sup, table, tbody, td, tfoot, th, thead, time, tr, ul, var, video {
+  border: 0;
+  box-sizing: border-box;
+  margin: 0;
+  outline: 0;
+  padding: 0;
+}
+
+/* This fixes the main tag being unsupported and horribly breaking the layout in even recent versions of
+// IE. It also gets rid of the little bullets and numbers from list items, saving you having to strip
+// them off repeatedly every time you make a menu or any other component that is semantically a list.
+// When you actually need bullets or numbering pseudo-elements provide more customisation options than
+// the standard list-style approach anyway. */
+main, li {
+  display: block;
+}
+
+/* A heading's level should be determined by it's placement in the document outline and not by the
+// stylistic appearance of the words. Sometimes a h2 will be designed smaller that a h3 elsewhere on the
+// same page. Components of a modern web page tend to have very localised heading styles; it's never
+// one-size-fits-all. Often headings are the same size as the accompanying text and are distinguished
+// by bolding, capitalisation and letter spacing instead.
+//
+// It makes much more sense for headings to inherit the same size as the surrounding text by default and
+// not some arbitrary larger size. You will have greater consistency and override less. */
+h1, h2, h3, h4 {
+  font-size: inherit;
+}
+
+/* This corrects some browsers defaulting to bolder. */
+strong {
+  font-weight: bold;
+}
+
+/* Long-gone are the days where all hyperlinks were blue, underlined and only wrapped inline content.
+//
+//color: inherit fixes buttons not inheriting text color in most browsers. This, along with
+//text-decoration: none makes for less surprises when applying links to things. Links are styled many
+// different ways on the same page. Think menus, sidebars, footers, buttons and within text. Some text
+// is light-on-dark, some is dark-on-light. The browser default blue or any other color would be illegible
+// in many places. It makes for less complex styles when links inherit the color intended for the region
+// they are in. Sometimes you just want to apply an underline, sometimes only a color. Sometimes nothing,
+// because you just wrapped an entire thumbnail and caption.
+//
+// 90% of your transitions apply to links and buttons, and most of them have a similar duration. Take a
+// look. I bet many of the remainder could have, had you assigned more styles to the link and not the
+// parent or child (which is a good idea anyway for a few reasons, namely a larger touch-friendly
+// clickable area). Rarely you need to remove transitions from a link or button. */
+a, button {
+  color: inherit;
+  cursor: pointer;
+  transition: .3s;
+}
+
+a {
+  text-decoration: none;
+}
+
+/* overflow: visible brings IE into line. The border, font, letter-spacing and background rules
+// conveniently reset the native appearance in all browsers. The -webkit-font-smoothing rule fixes buggy
+// inheritance. For UX reasons and consistency with links it is a good idea to give all buttons a pointer
+// cursor. */
+button {
+  -webkit-font-smoothing: inherit;
+  background: none;
+  border: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  overflow: visible;
+}
+
+/* This undoes a bummer psuedo-element Firefox adds inside buttons that causes them to display larger
+// than expected. It's a shame this has been a recognized bug since 2002. */
+::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
+/* Be carefull with this! It removes the gross user agent default outline that appears when focusing
+// interactive elements. For accessibility only do this if you are absolutely sure you have custom focus
+// state styles set everywhere. */
+:focus {
+  outline: 0;
+}
+
+/* One of the fundamentals of responsive web development, this makes sure images respect the bounds of
+// a fluid container. The image never exceeds the width of it's container. The image's aspect ratio is
+// preserved even if it has an inline height set.
+//
+//border: 0 fixes images within links gaining a border in IE 8, 9 and 10. */
+img {
+  border: 0;
+  height: auto;
+  max-width: 100%;
+}
+
+::-webkit-scrollbar-track
+{
+	//-webkit-box-shadow: inset 0 0 4px rgba(0,0,0,0.3);
+	background-color: rgba(0, 0, 0, .2);
+}
+
+::-webkit-scrollbar
+{
+	width: 6px;
+}
+
+::-webkit-scrollbar-thumb
+{
+	background-color: rgba(0, 0, 0, .2);
+}
+
+/* React Toolbox resets and sets */
+input:not([type='checkbox']):not([type='radio']), button {
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+  outline: none;
+}
+
+/* -- Remove firefox default style for required inputs */
+input[required]:-moz-ui-invalid {
+  box-shadow: none;
+}
+
+
+h1 {
+  font-family: var(--preferred-font);
+  font-weight: 400;
+  letter-spacing: -.02em;
+  line-height: 1.35;
+}
+
+h2 {
+  font-family: var(--preferred-font);
+  font-weight: 400;
+  line-height: 4.8rem;
+}
+
+h3 {
+  font-family: var(--preferred-font);
+  font-weight: 400;
+  line-height: 4rem;
+}
+
+h4 {
+  -moz-osx-font-smoothing: grayscale;
+  font-family: var(--preferred-font);
+  font-weight: 400;
+  line-height: 3.2rem;
+}
+
+h5 {
+  font-family: var(--preferred-font);
+  font-weight: 500;
+  letter-spacing: .02em;
+  line-height: 1;
+}
+
+h6 {
+  font-family: var(--preferred-font);
+  font-weight: 400;
+  letter-spacing: .04em;
+  line-height: 2.4rem;
+}
+
+p {
+  font-size: 1.4rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 2.2rem;
+}
+
+p + p {
+  margin-top: 1.6rem;
+}

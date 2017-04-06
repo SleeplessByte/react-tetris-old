@@ -1,0 +1,41 @@
+engines:
+  eslint:
+    enabled: true
+    extensions:
+    - .es6
+    - .js
+    - .jsx
+  csslint:
+    enabled: true
+    extensions:
+    - .css
+  tslint:
+    enabled: true
+    channel: "beta"
+    extensions:
+    - .ts
+    - .tsx
+  duplication:
+    enabled: true
+    config:
+      languages:
+      - javascript
+  fixme:
+    enabled: true
+ratings:
+  paths:
+  - "**.css"
+  - "**.js"
+  - "**.jsx"
+  - "**.es6"
+  - "**.ts"
+  - "**.tsx"
+exclude_paths:
+- spec/**/*
+- "**/vendor/**/*"
+- "src/**/*mock.js"
+- e2e/**/*
+- tests/**/*
+- "src/static/fonts/**/*"
+- test/**/*
+- webpack/**/*

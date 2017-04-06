@@ -1,0 +1,7 @@
+--colors
+--require babel-core/register
+--require source-map-support/register
+--require test/setup.js
+--reporter spec
+--webpack-config webpack.config.babel.js
+test/**/*.spec.{js,jsx,ts,tsx}
