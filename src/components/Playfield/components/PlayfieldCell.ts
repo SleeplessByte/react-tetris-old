@@ -2,11 +2,13 @@ import { createElement, Component } from 'react'
 import { connect } from 'react-redux'
 
 import StoreState, { StoreDispatch } from 'store/state'
-import { getCellAt, fill } from 'store/game/reducer'
+import { fill } from 'store/game/actions'
+import { getCell, sliceGameState } from 'store/game/selectors'
 import { CellState, CellType } from 'store/game/state'
 
 interface ConnectedPlayfieldCellProps extends PlayfieldCellProps {
   cellColor: string
+  cellOpacity: number
   cellState: CellState
 
   fill(): void
@@ -32,9 +34,21 @@ const cellToColorMapping = {
   [CellType._]: 'transparent'
 }
 
-function mapCellToColor(cell: CellType) {
-  return cellToColorMapping[cell]
+const stateToOpacityMapping = {
+  [CellState.None]: .13,
+  [CellState.Active]: 1,
+  [CellState.InActive]: .54,
+  [CellState.Ghost]: .32
 }
+
+function mapCellToColor(type: CellType) {
+  return cellToColorMapping[type]
+}
+
+function mapCellToOpacity(state: CellState) {
+  return stateToOpacityMapping[state]
+}
+
 
 export class PlayfieldCell extends Component<ConnectedPlayfieldCellProps, PlayfieldCellState> {
 
@@ -45,7 +59,8 @@ export class PlayfieldCell extends Component<ConnectedPlayfieldCellProps, Playfi
 
     this.cellProps = {
       style: {
-        backgroundColor: props.cellColor
+        backgroundColor: props.cellColor,
+        opacity: props.cellOpacity
       },
 
       onClick: this.props.fill
@@ -53,10 +68,11 @@ export class PlayfieldCell extends Component<ConnectedPlayfieldCellProps, Playfi
   }
 
   componentWillReceiveProps(nextProps: ConnectedPlayfieldCellProps) {
-    if (nextProps.cellColor !== this.props.cellColor) {
+    if (nextProps.cellColor !== this.props.cellColor || nextProps.cellOpacity !== this.props.cellOpacity) {
       this.cellProps = {
         style: {
-          backgroundColor: nextProps.cellColor
+          backgroundColor: nextProps.cellColor,
+          opacity: nextProps.cellOpacity
         },
 
         onClick: this.props.fill
@@ -70,9 +86,10 @@ export class PlayfieldCell extends Component<ConnectedPlayfieldCellProps, Playfi
 }
 
 function mapStateToProps(state: StoreState, ownProps: PlayfieldCellProps) {
-  const cell = getCellAt(state.game, ownProps.x, ownProps.y)
+  const cell = getCell(sliceGameState(state), ownProps)
   return {
     cellColor: mapCellToColor(cell && cell.type || CellType._),
+    cellOpacity: mapCellToOpacity(cell && cell.state || CellState.None),
     cellState: cell && cell.state || CellState.None,
     ...ownProps
   }

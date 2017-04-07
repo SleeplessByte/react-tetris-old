@@ -35,6 +35,11 @@ export class Playfield extends Component<PlayfieldProps, PlayfieldState> {
     this.renderRows = this.renderRows.bind(this)
   }
 
+  shouldComponentUpdate(nextProps: PlayfieldProps) {
+    // Cells are connected to store so don't update children through top-down field to row to cell
+    return nextProps !== this.props
+  }
+
   renderRow(row: RowProps) {
     return createElement(PlayfieldRow, row)
   }

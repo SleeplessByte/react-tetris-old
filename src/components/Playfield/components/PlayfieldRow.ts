@@ -31,6 +31,7 @@ export class PlayfieldRow extends Component<PlayfieldRowProps, PlayfieldRowState
   }
 
   shouldComponentUpdate(nextProps: PlayfieldRowProps) {
+    // Cells are connected to store so don't update children through top-down row to cell
     return nextProps.y !== this.props.y
   }
 
