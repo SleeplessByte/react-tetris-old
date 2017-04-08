@@ -37,6 +37,12 @@ const S = CellType.S
 const T = CellType.T
 const Z = CellType.Z
 
+templates[_] = [
+  [_, _, _],
+  [_, _, _],
+  [_, _, _]
+]
+
 templates[I] = [
   [_, _, _, _],
   [_, _, _, _],
@@ -79,6 +85,12 @@ templates[Z] = [
   [_, Z, Z]
 ]
 
+/**
+ * Generate a cell from a cell type
+ *
+ * @param {CellType} type
+ * @returns {Cell}
+ */
 function generateCell(type: CellType): Cell {
   if (type === _) {
     return null
@@ -87,6 +99,12 @@ function generateCell(type: CellType): Cell {
   return type
 }
 
+/**
+ * Unwraps the two dimensional template into a one dimensional array
+ *
+ * @param {CellType[][]} template
+ * @returns
+ */
 function unwrap(template: CellType[][]) {
   const h = template.length
   const w = template[0].length
@@ -99,20 +117,33 @@ function unwrap(template: CellType[][]) {
   }, new Array(w * h) as Array<Cell>)
 }
 
+/**
+ * Generates a tetromino of cells based on a type
+ *
+ * @export
+ * @param {CellType} type
+ * @returns {(Tetromino | null)} null if _, tetromino otherwise
+ */
 export function tetrominoFactory(type: CellType): Tetromino | null {
   if (type === _) {
     return null
   }
 
   const template = templates[type]
-  return {
-    x0: (TILES_WIDTH - template[0].length) / 2 | 0,
-    y0: TILES_HEIGHT + TILES_BUFFER_HEIGHT - template.length - 1,
+  return moveToSpawnPosition({
     width: template[0].length,
     height: template.length,
     cells: unwrap(template),
     type
-  }
+  })
+}
+
+export function moveToSpawnPosition(partial: Pick<Tetromino, 'width' | 'height' | 'cells' | 'type'>): Tetromino {
+  return {
+    x0: (TILES_WIDTH - partial.width) / 2 | 0,
+    y0: TILES_HEIGHT + TILES_BUFFER_HEIGHT - partial.height - 1,
+    ...partial
+  } as Tetromino
 }
 
 export default tetrominoFactory

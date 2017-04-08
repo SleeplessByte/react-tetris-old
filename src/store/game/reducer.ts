@@ -8,7 +8,7 @@ import {
   Tetromino
 } from './state'
 
-import tetrominoFactory from 'store/generator/tetrominoFactory'
+import tetrominoFactory, { moveToSpawnPosition } from 'store/generator/tetrominoFactory'
 
 import {
   GameAction,
@@ -19,13 +19,21 @@ import {
   ACTION_MOVE_ACTIVE,
   ACTION_FALL_ACTIVE,
   ACTION_SETTLE_ACTIVE,
-  ACTION_ROTATE_ACTIVE
+  ACTION_ROTATE_ACTIVE,
+  ACTION_RESPAWN_ACTIVE
 } from './actions'
 
 import { TILES_WIDTH } from 'config'
 
 declare const __DEV__: boolean
 
+/**
+ * Fill (settle) a cell in the game field
+ *
+ * @param {GameField} field mutable field
+ * @param {{ x: number, y: number, cell: Cell }} props cell and position
+ * @returns {GameField} the muted field
+ */
 function fillCell(field: GameField, props: { x: number, y: number, cell: Cell }): GameField {
   const i = props.y * TILES_WIDTH + props.x
   if (i - 1 < field.length) {
@@ -34,10 +42,35 @@ function fillCell(field: GameField, props: { x: number, y: number, cell: Cell })
   return field
 }
 
+/**
+ * Spawn a tetromino of a certain type
+ *
+ * @param {CellType} type
+ * @returns {(Readonly<Tetromino> | null)}
+ */
 function spawnActive(type: CellType): Readonly<Tetromino> | null {
   return Object.freeze(tetrominoFactory(type))
 }
 
+/**
+ *
+ *
+ * @param {Tetromino} active
+ * @returns
+ */
+function respawnActive(active: Tetromino) {
+  // tslint:disable-next-line:no-unused-variable
+  const { x0, y0, ...partial } = active
+  return Object.freeze(moveToSpawnPosition(partial))
+}
+
+/**
+ * Move the active
+ *
+ * @param {GameState} state
+ * @param {{ dx: number, dy: number }} props
+ * @returns {(Readonly<Tetromino> | null)}
+ */
 function moveActive(state: GameState, props: { dx: number, dy: number }): Readonly<Tetromino> | null {
   const { active } = state
   if (!active) {
@@ -50,6 +83,12 @@ function moveActive(state: GameState, props: { dx: number, dy: number }): Readon
   return Object.freeze({ ...active, x0: active.x0 + props.dx, y0: active.y0 + props.dy })
 }
 
+/**
+ * Settle the active
+ *
+ * @param {GameState} state
+ * @returns {Partial<GameState>}
+ */
 function settleActive(state: GameState): Partial<GameState> {
   const { active } = state
   if (!active) {
@@ -80,11 +119,21 @@ function settleActive(state: GameState): Partial<GameState> {
   }
 }
 
-function updateField(field: GameField): GameFieldState {
-  return Object.freeze(field)
+/**
+ * Turns the field into a immutable state-able field
+ *
+ * @param {(GameField | GameFieldState)} field
+ * @returns {GameFieldState}
+ */
+function makeFieldState(field: GameField | GameFieldState): GameFieldState {
+  if (Object.isFrozen(field)) {
+    return field
+  }
+
+  return Object.freeze(field as GameField)
 }
 
-export function gameState(state = initialState(), action: GameAction): GameState {
+export function gameReducer(state = initialState(), action: GameAction): GameState {
   switch (action.type) {
     case ACTION_MOVE_ACTIVE:
     case ACTION_FALL_ACTIVE:
@@ -105,13 +154,17 @@ export function gameState(state = initialState(), action: GameAction): GameState
 
     case ACTION_UPDATE:
       if (__DEV__) { console.log('[reducer] [game] update game field') }
-      return Object.freeze({ ...state, field: updateField(action.payload) })
+      return Object.freeze({ ...state, field: makeFieldState(action.payload) })
 
     case ACTION_SPAWN_ACTIVE:
       if (__DEV__) { console.log(`[reducer] [game] spawn active with type: ${action.payload}`) }
       return Object.freeze({ ...state, active: spawnActive(action.payload) })
+
+    case ACTION_RESPAWN_ACTIVE:
+      if (__DEV__) { console.log(`[reducer] [game] respawn active with type: ${action.payload.type}`) }
+      return Object.freeze({ ...state, active: respawnActive(action.payload) })
   }
   return state
 }
 
-export default gameState
+export default gameReducer

@@ -1,6 +1,13 @@
 import { initialState, TimeState } from './state'
 import { ACTION_TICK, ACTION_SET_NEXT_FRAME, TimeAction } from './actions'
 
+/**
+ * Ensures there is at least length of frame left
+ *
+ * @param {TimeState} state
+ * @param {{ t0: number, length: number }} { t0, length }
+ * @returns
+ */
 function ensureFrameLengthOver(state: TimeState, { t0, length }: { t0: number, length: number }) {
   const remaining = (state.t0 + state.frameLength) - t0
   if (remaining > length) {

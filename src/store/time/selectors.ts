@@ -2,7 +2,6 @@ import { TimeState } from './state'
 import { createSelector } from 'reselect'
 import StoreState from 'store/state'
 
-
 export const sliceTimeState = (state: StoreState) => state.time
 
 export const sliceTimeStateFrame = createSelector(sliceTimeState, (state: TimeState) => state.frame)

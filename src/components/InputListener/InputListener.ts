@@ -1,6 +1,6 @@
 import { Component } from 'react'
 import { connect } from 'react-redux'
-import { pressDown, pressLeft, pressRight, pressUp, pressRotateClockwise, pressRotateCounterClockwise } from 'store/input/actions'
+import { pressDown, pressLeft, pressRight, pressUp, pressRotateClockwise, pressRotateCounterClockwise, pressHold } from 'store/input/actions'
 import StoreState, { StoreDispatch } from 'store/state'
 
 export interface InputListenerProps {}
@@ -14,6 +14,7 @@ interface ConnectedInputListenerProps extends InputListenerProps {
   pressDown(): void
   pressRotateClockwise(): void
   pressRotateCounterClockwise(): void
+  pressHold(): void
 }
 
 interface InputListenerState {}
@@ -24,6 +25,7 @@ const ARROW_UP = 38
 const ARROW_DOWN = 40
 const SHIFT = 16
 const CTRL = 17
+const SPACE = 32
 
 const W = 87
 const A = 65
@@ -31,6 +33,7 @@ const S = 83
 const D = 68
 const Q = 81
 const E = 69
+const R = 82
 
 export class InputListener extends Component<ConnectedInputListenerProps, InputListenerState> {
 
@@ -47,6 +50,7 @@ export class InputListener extends Component<ConnectedInputListenerProps, InputL
     this.onPressDown = this.onPressDown.bind(this)
     this.onPressRotateClockwise = this.onPressRotateClockwise.bind(this)
     this.onPressRotateCounterClockwise = this.onPressRotateCounterClockwise.bind(this)
+    this.onPressHold = this.onPressHold.bind(this)
   }
 
   onPressLeft() {
@@ -63,6 +67,10 @@ export class InputListener extends Component<ConnectedInputListenerProps, InputL
 
   onPressDown() {
     this.props.pressDown()
+  }
+
+  onPressHold() {
+    this.props.pressHold()
   }
 
   onPressRotateClockwise() {
@@ -95,7 +103,7 @@ export class InputListener extends Component<ConnectedInputListenerProps, InputL
       case W:
         return this.onPressUp()
       case ARROW_DOWN:
-      case D:
+      case S:
         return this.onPressDown()
       case SHIFT:
       case Q:
@@ -103,6 +111,9 @@ export class InputListener extends Component<ConnectedInputListenerProps, InputL
       case CTRL:
       case E:
         return this.onPressRotateClockwise()
+      case SPACE:
+      case R:
+        return this.onPressHold()
     }
   }
 
@@ -150,6 +161,7 @@ function mapDispatchToProps(dispatch: StoreDispatch) {
     pressUp: () => { dispatch(pressUp()) },
     pressRotateClockwise: () => { dispatch(pressRotateClockwise()) },
     pressRotateCounterClockwise: () => { dispatch(pressRotateCounterClockwise()) },
+    pressHold: () => { dispatch(pressHold()) }
   }
 }
 

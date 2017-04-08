@@ -23,6 +23,13 @@ function createDelayFrameAction(t0: number, length: number): SetNextFrameAction 
   }
 }
 
+/**
+ * Tick the time to t1
+ *
+ * @export
+ * @param {number} t1
+ * @returns
+ */
 export function tick(t1: number) {
   return (dispatch: StoreDispatch) => {
     dispatch(gameTick())
@@ -30,6 +37,14 @@ export function tick(t1: number) {
   }
 }
 
+/**
+ * Ensure there is at least length, when the time is t0
+ *
+ * @export
+ * @param {number} t0
+ * @param {number} length
+ * @returns
+ */
 export function setNextFrameTo(t0: number, length: number) {
   return (dispatch: StoreDispatch) => {
     dispatch(createDelayFrameAction(t0, length))

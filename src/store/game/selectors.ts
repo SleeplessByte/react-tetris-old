@@ -7,7 +7,13 @@ import Tetromino from 'interfaces/Tetromino'
 
 declare const __DEV__: boolean
 
-export enum CellState {
+/**
+ * Cell state for annotated cells
+ *
+ * @export
+ * @enum {number}
+ */
+export const enum CellState {
   None = 0,
 
   InActive = 1,
@@ -15,26 +21,54 @@ export enum CellState {
   Ghost = 3
 }
 
+/**
+ * Cell with annotation
+ */
 export type AnnotatedCell = {
   state: CellState
   cell: Cell
 }
 
 /**
- * Get the Game Field
+ * Get the field from the state
  *
- * @param {StoreState} state the store state
- * @returns {GameField} the field
+ * @param {(GameState | GameFieldState)} state
+ * @returns {GameFieldState}
  */
-const getField = (state: GameState | GameFieldState): GameFieldState => {
+function getField(state: GameState | GameFieldState): GameFieldState {
   return Array.isArray(state)
     ? state as GameFieldState
     : getField((state as GameState).field)
 }
 
-const getActive = (state: GameState): Readonly<Tetromino> | null => state.active
-const getGhost = (state: GameState): Readonly<Tetromino> | null => state.ghost
+/**
+ * Get active from the state
+ *
+ * @param {GameState} state the state
+ * @returns {(Readonly<Tetromino> | null)} active
+ */
+function getActive(state: GameState): Readonly<Tetromino> | null {
+  return state.active
+}
 
+/**
+ * Get the ghost from the state
+ *
+ * @param {GameState} state the state
+ * @returns {(Readonly<Tetromino> | null)} ghost
+ */
+function getGhost(state: GameState): Readonly<Tetromino> | null {
+  return state.ghost
+}
+
+/**
+ * Get an active cell's type
+ *
+ * @export
+ * @param {(Tetromino | Readonly<Tetromino> | null)} active
+ * @param {{ x: number, y: number}} props
+ * @returns {CellType} the cell at position x, y or _
+ */
 export function getActiveCell(active: Tetromino | Readonly<Tetromino> | null, props: { x: number, y: number}): CellType {
   const invalid = !active
     || active.x0 > props.x
@@ -58,6 +92,14 @@ export function getActiveCell(active: Tetromino | Readonly<Tetromino> | null, pr
   return active.cells[i] || CellType._
 }
 
+/**
+ * Get a field (settled) cell's type
+ *
+ * @export
+ * @param {(GameField | GameFieldState)} field
+ * @param {{ x: number, y: number}} props
+ * @returns {CellType} the cell at position x, y or _
+ */
 export function getFieldCell(field: GameField | GameFieldState, props: { x: number, y: number}): CellType {
   const i = props.y * TILES_WIDTH + props.x
   if (__DEV__) {
@@ -71,7 +113,7 @@ export function getFieldCell(field: GameField | GameFieldState, props: { x: numb
 }
 
 /**
- * Get a cell
+ * Get a cell with annotation
  *
  * @param {GameState|GameField} state the store state or field
  * @param {{ x: number, y: number }} props the props
@@ -121,7 +163,12 @@ export function isRowFilled(state: GameState | GameFieldState, props: { y: numbe
 }
 
 /**
- * @param {GameState|GameFieldState} state the store state or field
+ * Check if a position is free and within bounds
+ *
+ * @export
+ * @param {(GameState | GameFieldState)} state
+ * @param {{ x: number, y: number }} props
+ * @returns {boolean} true if it is, false otherwise
  */
 export function isPositionFree(state: GameState | GameFieldState, props: { x: number, y: number }): boolean {
   const { x, y } = props
@@ -132,17 +179,27 @@ export function isPositionFree(state: GameState | GameFieldState, props: { x: nu
     && getFieldCell(getField(state), props) === CellType._
 }
 
-const _canMoveCheckProps = { x: -1, y: -1 }
-export function canMoveActive(state: GameState, active: Tetromino | Readonly<Tetromino>, props: { dx: number, dy: number }): boolean {
+
+/**
+ * Check if a move is possible
+ *
+ * @export
+ * @param {GameState} state
+ * @param {(Tetromino | Readonly<Tetromino>)} movee the tetromino that is being moved
+ * @param {{ dx: number, dy: number }} props the move
+ * @returns {boolean}
+ */
+export function isMovePossible(state: GameState, movee: Tetromino | Readonly<Tetromino>, props: { dx: number, dy: number }): boolean {
   const { dx, dy } = props
-  const { width, height, y0, x0, cells } = active
+  const { width, height, y0, x0, cells } = movee
+  const canMoveCheckProps = { x: -1, y: -1 }
 
   for (let _y = 0; _y < height; _y++) {
-    _canMoveCheckProps.y = y0 + _y + dy
+    canMoveCheckProps.y = y0 + _y + dy
     for (let _x = 0; _x < width; _x++) {
-      _canMoveCheckProps.x = x0 + _x + dx
-      const cell = cells[_y * width + _x]
-      if (cell && !isPositionFree(state, _canMoveCheckProps)) {
+      canMoveCheckProps.x = x0 + _x + dx
+
+      if (cells[_y * width + _x] && !isPositionFree(state, canMoveCheckProps)) {
         return false
       }
     }
@@ -154,16 +211,41 @@ export function canMoveActive(state: GameState, active: Tetromino | Readonly<Tet
 const MOVE_DOWN = Object.freeze({ dx: 0, dy: -1 })
 const MOVE_LEFT = Object.freeze({ dx: -1, dy: 0 })
 const MOVE_RIGHT = Object.freeze({ dx: 1, dy: 0 })
-export function canMoveActiveDown(state: GameState, active: Tetromino | Readonly<Tetromino> | null): boolean {
-  return active !== null && canMoveActive(state, active, MOVE_DOWN)
+
+/**
+ * Convenience method to see if the movee can move down
+ *
+ * @export
+ * @param {GameState} state
+ * @param {(Tetromino | Readonly<Tetromino> | null)} movee
+ * @returns {boolean}
+ */
+export function isMoveDownPossible(state: GameState, movee: Tetromino | Readonly<Tetromino> | null): boolean {
+  return movee !== null && isMovePossible(state, movee, MOVE_DOWN)
 }
 
+/**
+ * Convenience method to see if the movee can move left
+ *
+ * @export
+ * @param {GameState} state
+ * @param {(Tetromino | Readonly<Tetromino> | null)} movee
+ * @returns {boolean}
+ */
 export function canMoveActiveLeft(state: GameState, active: Tetromino | Readonly<Tetromino> | null): boolean {
-  return active !== null && canMoveActive(state, active, MOVE_LEFT)
+  return active !== null && isMovePossible(state, active, MOVE_LEFT)
 }
 
+/**
+ * Convenience method to see if the movee can move right
+ *
+ * @export
+ * @param {GameState} state
+ * @param {(Tetromino | Readonly<Tetromino> | null)} movee
+ * @returns {boolean}
+ */
 export function canMoveActiveRight(state: GameState, active: Tetromino | Readonly<Tetromino> | null): boolean {
-  return active !== null && canMoveActive(state, active, MOVE_RIGHT)
+  return active !== null && isMovePossible(state, active, MOVE_RIGHT)
 }
 
 /**
@@ -177,8 +259,16 @@ export function sliceGameState(state: StoreState): GameState {
 }
 
 /**
- * Get the GameState field
+ * Slice the state into the game state's field
  */
 export const sliceGameStateField = createSelector(sliceGameState, getField)
+
+/**
+ * Slice the state into the game state's active
+ */
 export const sliceGameStateActive = createSelector(sliceGameState, getActive)
+
+/**
+ * Slice the state into the game state's ghost
+ */
 export const sliceGameStateGhost = createSelector(sliceGameState, getGhost)

@@ -5,19 +5,25 @@ import Cell, { CellType } from 'interfaces/Cell'
 
 export { Cell, CellType, Tetromino }
 
+/**
+ * Entry in the {GameField}
+ */
 type GameFieldEntry = Cell
+
+/**
+ * The game field of settled cells
+ */
 export type GameField = GameFieldEntry[]
+
+/**
+ * Immutable version of the {GameField}
+ */
 export type GameFieldState = ReadonlyArray<GameFieldEntry>
 
 export interface GameState extends Readonly<GameState> {
   active: Readonly<Tetromino> | null
   ghost: Readonly<Tetromino> | null
   field: GameFieldState
-}
-
-const cellTypes = [CellType.I, CellType.J, CellType.L, CellType.O, CellType.S, CellType.T, CellType.Z]
-export function createRandomCell(): CellType {
-  return cellTypes[Math.floor(Math.random() * cellTypes.length)]
 }
 
 export function initialState(): GameState {

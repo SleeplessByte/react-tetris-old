@@ -24,7 +24,7 @@ function Loading({ pastDelay }: { pastDelay: boolean }) {
     : null
 }
 
-export const AsyncTetrominoPreview = Loadable<TetrominoPreviewProps>({
+export const AsyncNextTetromino = Loadable<TetrominoPreviewProps>({
   loader: () => new Promise((resolve) => {
     require.ensure([], function (require) {
       resolve(require<ModuleWithDefaultExport<any>>('./TetrominoPreview').default)
@@ -36,10 +36,25 @@ export const AsyncTetrominoPreview = Loadable<TetrominoPreviewProps>({
   }
 })
 
-AsyncTetrominoPreview.displayName = 'Async(TetrominoPreview)'
+export const AsyncHoldTetromino = Loadable<TetrominoPreviewProps>({
+  loader: () => new Promise((resolve) => {
+    require.ensure([], function (require) {
+      resolve(require<ModuleWithDefaultExport<any>>('./TetrominoPreview').HoldPreview)
+    }, 'tetromino-preview')
+  }),
+  LoadingComponent: Loading,
+  webpackRequireWeakId: () => {
+    return require.resolveWeak('./TetrominoPreview')
+  }
+})
+
+AsyncNextTetromino.displayName = 'Async(NextTetromino)'
+AsyncHoldTetromino.displayName = 'Async(HoldTetromino)'
 
 export function preload() {
-  AsyncTetrominoPreview.preload()
+  AsyncNextTetromino.preload()
+  AsyncHoldTetromino.preload()
 }
 
-export default AsyncTetrominoPreview
+
+export default AsyncNextTetromino

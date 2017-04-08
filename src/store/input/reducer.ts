@@ -1,7 +1,7 @@
 import { initialState, InputState } from './state'
 
-export function inputState(state = initialState(), _action: any): InputState {
+export function inputReducer(state = initialState(), _action: any): InputState {
   return state
 }
 
-export default inputState
+export default inputReducer

@@ -1,11 +1,11 @@
-import { Cell, CellType, GameField, Tetromino } from './state'
+import { Cell, CellType, GameField, GameFieldState, Tetromino } from './state'
 import { StoreThunkAction } from 'store/state'
-import { canMoveActive, sliceGameState, sliceGameStateActive } from './selectors'
+import { isMovePossible, sliceGameState, sliceGameStateActive } from './selectors'
 
 export const ACTION_FILL = 'ACTION_FILL'
 export const ACTION_UPDATE = 'ACTION_UPDATE'
-export const ACTION_ROWS_CLEARED = 'ACTION_ROWS_CLEARED'
 export const ACTION_SPAWN_ACTIVE = 'ACTION_SPAWN_ACTIVE'
+export const ACTION_RESPAWN_ACTIVE = 'ACTION_RESPAWN_ACTIVE'
 export const ACTION_FALL_ACTIVE = 'ACTION_FALL_ACTIVE'
 export const ACTION_MOVE_ACTIVE = 'ACTION_MOVE_ACTIVE'
 export const ACTION_SETTLE_ACTIVE = 'ACTION_SETTLE_ACTIVE'
@@ -28,32 +28,25 @@ export type Movement = typeof MOVEMENT_MOVE_DOWN
  | typeof MOVEMENT_MOVE_RIGHT
  | typeof MOVEMENT_NONE
 
-export type UpdateAction = { type: typeof ACTION_UPDATE, payload: GameField }
-export type RowsClearedAction = { type: typeof ACTION_ROWS_CLEARED, payload: number[] }
+export type UpdateAction = { type: typeof ACTION_UPDATE, payload: GameField | GameFieldState }
 export type SpawnActiveAction = { type: typeof ACTION_SPAWN_ACTIVE, payload: CellType }
+export type RespawnActiveAction = { type: typeof ACTION_RESPAWN_ACTIVE, payload: Tetromino }
 export type MoveActiveAction = { type: typeof ACTION_MOVE_ACTIVE | typeof ACTION_FALL_ACTIVE, payload: Movement }
 export type SettleActiveAction = { type: typeof ACTION_SETTLE_ACTIVE }
 export type RotateActiveAction = { type: typeof ACTION_ROTATE_ACTIVE, payload: Tetromino }
 export type UpdateGhostAction = { type: typeof ACTION_UPDATE_GHOST, payload: Tetromino | null }
 export type GameAction = UpdateAction
- | RowsClearedAction
+ | RespawnActiveAction
  | SpawnActiveAction
  | MoveActiveAction
  | SettleActiveAction
  | RotateActiveAction
  | UpdateGhostAction
 
-function createUpdateAction(field: GameField): UpdateAction {
+function createUpdateAction(field: GameField | GameFieldState): UpdateAction {
   return {
     type: ACTION_UPDATE,
     payload: field
-  }
-}
-
-function createRowsClearedAction(ys: number[]): RowsClearedAction {
-  return {
-    type: ACTION_ROWS_CLEARED,
-    payload: ys
   }
 }
 
@@ -61,6 +54,13 @@ function createSpawnActiveAction(type: CellType): SpawnActiveAction {
   return {
     type: ACTION_SPAWN_ACTIVE,
     payload: type
+  }
+}
+
+function createRepawnActiveAction(active: Tetromino): RespawnActiveAction {
+  return {
+    type: ACTION_RESPAWN_ACTIVE,
+    payload: active
   }
 }
 
@@ -98,24 +98,36 @@ function createMoveActiveAction(movement: Movement): MoveActiveAction {
   }
 }
 
-
-export function update(field: GameField): StoreThunkAction<UpdateAction> {
+/**
+ * Update the settle field
+ *
+ * @export
+ * @param {(GameField | GameFieldState)} field
+ * @returns {StoreThunkAction<UpdateAction>}
+ */
+export function update(field: GameField | GameFieldState): StoreThunkAction<UpdateAction> {
   return (dispatch) => {
     return dispatch(createUpdateAction(field))
   }
 }
 
-function updateGhost(): StoreThunkAction<UpdateGhostAction> {
+/**
+ * Update the ghost position based on the current active
+ *
+ * @returns {StoreThunkAction<UpdateGhostAction>}
+ */
+function calculateGhostPosition(): StoreThunkAction<UpdateGhostAction> {
   return (dispatch, getState) => {
     const state = getState()
     const gameState = sliceGameState(state)
     const active = sliceGameStateActive(state)
+
     if (!active) {
       return dispatch(createUpdateGhostAction(null))
     }
 
     const ghost = { ...active } as Tetromino
-    while (canMoveActive(gameState, ghost, MOVEMENT_MOVE_DOWN)) {
+    while (isMovePossible(gameState, ghost, MOVEMENT_MOVE_DOWN)) {
       ghost.y0 -= 1
     }
 
@@ -123,15 +135,12 @@ function updateGhost(): StoreThunkAction<UpdateGhostAction> {
   }
 }
 
-export function rowsCleared(ys: number[]): StoreThunkAction<RowsClearedAction|null> {
-  return (dispatch) => {
-    if (ys.length === 0) {
-      return null
-    }
-    return dispatch(createRowsClearedAction(ys))
-  }
-}
-
+/**
+ * Drop a tetromino from the bag
+ *
+ * @export
+ * @returns {StoreThunkAction<SpawnActiveAction>}
+ */
 export function dropFromBag(): StoreThunkAction<SpawnActiveAction> {
   return (dispatch, getState) => {
     const state = getState()
@@ -140,38 +149,65 @@ export function dropFromBag(): StoreThunkAction<SpawnActiveAction> {
       ? bag[0]
       : CellType._
     const action = dispatch(createSpawnActiveAction(type))
-    dispatch(updateGhost())
+    dispatch(calculateGhostPosition())
     return action
   }
 }
 
+/**
+ * Apply gravity
+ *
+ * @export
+ * @returns {StoreThunkAction<MoveActiveAction>}
+ */
 export function applyGravity(): StoreThunkAction<MoveActiveAction> {
   return (dispatch) => {
     return dispatch(createFallActiveAction())
   }
 }
 
-export function settleActive(): StoreThunkAction<SettleActiveAction> {
+/**
+ * Settle the active
+ *
+ * @export
+ * @returns {StoreThunkAction<SettleActiveAction>}
+ */
+export function settle(): StoreThunkAction<SettleActiveAction> {
   return (dispatch) => {
     return dispatch(createSettleActiveAction())
   }
 }
 
+/**
+ * Move the active
+ *
+ * @export
+ * @param {Movement} movement
+ * @returns {(StoreThunkAction<MoveActiveAction|null>)}
+ */
 export function move(movement: Movement): StoreThunkAction<MoveActiveAction|null> {
   return (dispatch, getState) => {
     const state = getState()
     const gameState = sliceGameState(state)
     const active = sliceGameStateActive(state)
-    if (!active || !canMoveActive(gameState, active, movement)) {
+    if (!active || !isMovePossible(gameState, active, movement)) {
       return null
     }
 
     const action = dispatch(createMoveActiveAction(movement))
-    dispatch(updateGhost())
+    dispatch(calculateGhostPosition())
     return action
   }
 }
 
+/**
+ * Transpose cells
+ *
+ * @param {number} width
+ * @param {number} height
+ * @param {Cell[]} cells
+ * @returns
+ */
 function transpose(width: number, height: number, cells: Cell[]) {
   const result = new Array(cells.length)
   for (let y = 0; y < height; y++) {
@@ -182,6 +218,14 @@ function transpose(width: number, height: number, cells: Cell[]) {
   return result
 }
 
+/**
+ * Reverse rows of cells
+ *
+ * @param {number} width
+ * @param {number} height
+ * @param {Cell[]} cells
+ * @returns
+ */
 function reverseRows(width: number, height: number, cells: Cell[]) {
   const result = new Array(cells.length)
   for (let y = 0; y < height; y++) {
@@ -192,14 +236,37 @@ function reverseRows(width: number, height: number, cells: Cell[]) {
   return result
 }
 
+/**
+ * Convenience method to rotate cells clockwise
+ *
+ * @param {number} width
+ * @param {number} height
+ * @param {Cell[]} cells
+ * @returns
+ */
 function rotateCellsClockwise(width: number, height: number, cells: Cell[]) {
   return reverseRows(width, height, transpose(width, height, cells))
 }
 
+/**
+ * Convience method to rotate cells counter clockwise
+ *
+ * @param {number} width
+ * @param {number} height
+ * @param {Cell[]} cells
+ * @returns
+ */
 function rotateCellsCounterClockwise(width: number, height: number, cells: Cell[]) {
   return transpose(width, height, reverseRows(width, height, cells))
 }
 
+/**
+ * Turns a rotation into the rotated cells of the passed in active
+ *
+ * @param {Tetromino} active
+ * @param {Rotation} rotation
+ * @returns {(Cell[] | null)}
+ */
 function rotationToRotated(active: Tetromino, rotation: Rotation): Cell[] | null {
    switch (rotation) {
       case Rotation.Clockwise:
@@ -211,15 +278,32 @@ function rotationToRotated(active: Tetromino, rotation: Rotation): Cell[] | null
     return null
 }
 
-
+/**
+ * Rotate active clockwise
+ *
+ * @export
+ * @returns {(StoreThunkAction<RotateActiveAction|null>)}
+ */
 export function rotateClockwise(): StoreThunkAction<RotateActiveAction|null> {
   return rotate(Rotation.Clockwise)
 }
 
+/**
+ * Rotate active counter clockwise
+ *
+ * @export
+ * @returns {(StoreThunkAction<RotateActiveAction|null>)}
+ */
 export function rotateCounterClockwise(): StoreThunkAction<RotateActiveAction|null> {
   return rotate(Rotation.CounterClockwise)
 }
 
+/**
+ * Rotate active
+ *
+ * @param {Rotation} rotation
+ * @returns {(StoreThunkAction<RotateActiveAction|null>)}
+ */
 function rotate(rotation: Rotation): StoreThunkAction<RotateActiveAction|null> {
   return (dispatch, getState) => {
     const state = getState()
@@ -235,14 +319,33 @@ function rotate(rotation: Rotation): StoreThunkAction<RotateActiveAction|null> {
     }
     const rotated: Tetromino = { ...active, cells }
 
-    if (!canMoveActive(gameState, rotated, MOVEMENT_NONE)) {
+    if (!isMovePossible(gameState, rotated, MOVEMENT_NONE)) {
       // Wall kick ? Floor kick?
       // TODO implement here
       return null
     }
 
     const action = dispatch(createRotateActiveAction(rotated))
-    dispatch(updateGhost())
+    dispatch(calculateGhostPosition())
+    return action
+  }
+}
+
+/**
+ *
+ *
+ * @export
+ * @param {(Tetromino | null)} active
+ * @returns {StoreThunkAction<void>}
+ */
+export function respawn(active: Tetromino | null): StoreThunkAction<void> {
+  return (dispatch) => {
+    if (active === null) {
+      return dispatch(dropFromBag())
+    }
+
+    const action = dispatch(createRepawnActiveAction(active))
+    dispatch(calculateGhostPosition())
     return action
   }
 }
