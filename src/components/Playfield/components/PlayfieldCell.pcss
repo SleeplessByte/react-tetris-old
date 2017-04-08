@@ -1,0 +1,95 @@
+.cell {
+  background-color: transparent;
+}
+
+.active {
+  &.I {
+    background-color: #00BCD4;
+  }
+
+  &.O {
+    background-color: #FFEB3B;
+  }
+
+  &.T {
+    background-color: #9C27B0;
+  }
+
+  &.S {
+    background-color: #4CAF50;
+  }
+
+  &.Z {
+    background-color: #F44336;
+  }
+
+  &.J {
+    background-color: #2196F3;
+  }
+
+  &.L {
+    background-color: #FF9800;
+  }
+}
+
+.locked {
+  transition: background-color 200ms cubic-bezier(0.0, 0.0, 0.2, 1);
+
+  &.I {
+    background-color: #9E9E9E;
+  }
+
+  &.O {
+    background-color: #E0E0E0;
+  }
+
+  &.T {
+    background-color: #616161;
+  }
+
+  &.S {
+    background-color: #424242;
+  }
+
+  &.Z {
+    background-color: #BDBDBD;
+  }
+
+  &.J {
+    background-color: #212121;
+  }
+
+  &.L {
+    background-color: #9E9E9E;
+  }
+}
+
+.ghost {
+  &.I {
+    background-color: rgba(0, 188, 212, .30);
+  }
+
+  &.O {
+    background-color: rgba(255, 235, 59, .30);
+  }
+
+  &.T {
+    background-color: rgba(156, 39, 176, .30);
+  }
+
+  &.S {
+    background-color: rgba(76, 175, 80, .30);
+  }
+
+  &.Z {
+    background-color: rgba(244, 67, 54, .30);
+  }
+
+  &.J {
+    background-color: rgba(33, 150, 243, .30);
+  }
+
+  &.L {
+    background-color: rgba(255, 152, 0, .30);
+  }
+}

@@ -2,16 +2,13 @@ import { createElement, Component } from 'react'
 import { connect } from 'react-redux'
 
 import StoreState, { StoreDispatch } from 'store/state'
-import { fill } from 'store/game/actions'
-import { getCell, sliceGameState } from 'store/game/selectors'
-import { CellState, CellType } from 'store/game/state'
+import { getCell, sliceGameState, CellState } from 'store/game/selectors'
+import { CellType } from 'store/game/state'
+
+const styles = require('./PlayfieldCell.pcss') as { [key: string]: string | undefined }
 
 interface ConnectedPlayfieldCellProps extends PlayfieldCellProps {
-  cellColor: string
-  cellOpacity: number
-  cellState: CellState
-
-  fill(): void
+  className: string
 }
 
 export interface PlayfieldCellProps {
@@ -22,33 +19,28 @@ export interface PlayfieldCellProps {
 
 interface PlayfieldCellState {}
 
-const cellToColorMapping = {
-  [CellType.I]: 'cyan',
-  [CellType.O]: 'yellow',
-  [CellType.T]: 'purple',
-  [CellType.S]: 'green',
-  [CellType.Z]: 'red',
-  [CellType.J]: 'blue',
-  [CellType.L]: 'orange',
+const typeToClassName = {
+  [CellType.I]: styles['I'],
+  [CellType.O]: styles['O'],
+  [CellType.T]: styles['T'],
+  [CellType.S]: styles['S'],
+  [CellType.Z]: styles['Z'],
+  [CellType.J]: styles['J'],
+  [CellType.L]: styles['L'],
 
-  [CellType._]: 'transparent'
+  [CellType._]: ''
 }
 
-const stateToOpacityMapping = {
-  [CellState.None]: .13,
-  [CellState.Active]: 1,
-  [CellState.InActive]: .54,
-  [CellState.Ghost]: .32
+const stateToClassName = {
+  [CellState.Active]: styles['active'],
+  [CellState.InActive]: styles['locked'],
+  [CellState.Ghost]: styles['ghost'],
+  [CellState.None]: ''
 }
 
-function mapCellToColor(type: CellType) {
-  return cellToColorMapping[type]
+export function mapCellToClassName(state: CellState, type: CellType) {
+  return `${styles['cell']} ${typeToClassName[type]} ${stateToClassName[state]}`
 }
-
-function mapCellToOpacity(state: CellState) {
-  return stateToOpacityMapping[state]
-}
-
 
 export class PlayfieldCell extends Component<ConnectedPlayfieldCellProps, PlayfieldCellState> {
 
@@ -58,47 +50,33 @@ export class PlayfieldCell extends Component<ConnectedPlayfieldCellProps, Playfi
     super(props)
 
     this.cellProps = {
-      style: {
-        backgroundColor: props.cellColor,
-        opacity: props.cellOpacity
-      },
-
-      onClick: this.props.fill
+      className: props.className || ''
     }
   }
 
   componentWillReceiveProps(nextProps: ConnectedPlayfieldCellProps) {
-    if (nextProps.cellColor !== this.props.cellColor || nextProps.cellOpacity !== this.props.cellOpacity) {
+    if (nextProps.className !== this.props.className) {
       this.cellProps = {
-        style: {
-          backgroundColor: nextProps.cellColor,
-          opacity: nextProps.cellOpacity
-        },
-
-        onClick: this.props.fill
+        className: nextProps.className || ''
       }
     }
   }
 
   render() {
-    return createElement('td', this.cellProps, `[${this.props.x}:${this.props.y}]`)
+    return createElement('td', this.cellProps)
   }
 }
 
 function mapStateToProps(state: StoreState, ownProps: PlayfieldCellProps) {
   const cell = getCell(sliceGameState(state), ownProps)
   return {
-    cellColor: mapCellToColor(cell && cell.type || CellType._),
-    cellOpacity: mapCellToOpacity(cell && cell.state || CellState.None),
-    cellState: cell && cell.state || CellState.None,
+    className: mapCellToClassName(cell.state, cell.cell || CellType._),
     ...ownProps
   }
 }
 
-function mapDispatchToProps(dispatch: StoreDispatch, ownProps: PlayfieldCellProps) {
-  return {
-    fill: () => { dispatch(fill(ownProps.x, ownProps.y)) }
-  }
+function mapDispatchToProps(_dispatch: StoreDispatch, _ownProps: PlayfieldCellProps) {
+  return {}
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(PlayfieldCell)

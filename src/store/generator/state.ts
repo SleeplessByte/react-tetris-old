@@ -1,26 +1,24 @@
-import Cell, { CellState, CellType } from 'interfaces/Cell'
-import Tetramino from 'interfaces/Tetramino'
+import { CellType } from 'interfaces/Cell'
+export { CellType }
 
-export { Cell, CellState, CellType, Tetramino }
-
-export interface GeneratorState {
-  bag: CellType[]
+export interface GeneratorState extends Readonly<GeneratorState> {
+  bag: ReadonlyArray<CellType>
 }
 
-function generateBag(): CellType[] {
+export function generateBag(): ReadonlyArray<CellType> {
   const all = [CellType.I, CellType.J, CellType.L, CellType.O, CellType.S, CellType.T, CellType.Z]
   const bag: CellType[] = []
   while (all.length > 0) {
     bag.push(...all.splice(Math.floor(Math.random() * all.length), 1))
   }
 
-  return bag
+  return Object.freeze(bag)
 }
 
 export function initialState(): GeneratorState {
-  return {
+  return Object.freeze({
     bag: generateBag()
-  }
+  })
 }
 
 export default GeneratorState

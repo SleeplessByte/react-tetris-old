@@ -1,34 +1,37 @@
 import { TILES_WIDTH, TILES_BUFFER_HEIGHT, TILES_HEIGHT } from 'config'
 
-import Cell, { CellState, CellType } from 'interfaces/Cell'
-import Tetramino from 'interfaces/Tetramino'
+import Tetromino from 'interfaces/Tetromino'
+import Cell, { CellType } from 'interfaces/Cell'
 
-export { Cell, CellState, CellType, Tetramino }
+export { Cell, CellType, Tetromino }
 
-export interface GameState {
-  active: Tetramino | null
-  field: Array<Cell | null>
+type GameFieldEntry = Cell
+export type GameField = GameFieldEntry[]
+export type GameFieldState = ReadonlyArray<GameFieldEntry>
+
+export interface GameState extends Readonly<GameState> {
+  active: Readonly<Tetromino> | null
+  ghost: Readonly<Tetromino> | null
+  field: GameFieldState
 }
 
-export function createRandomCell() {
-  const cell: Cell = {
-    type: 1 + Math.floor(Math.random() * 7),
-    state: CellState.Active
-  }
-  return cell
+const cellTypes = [CellType.I, CellType.J, CellType.L, CellType.O, CellType.S, CellType.T, CellType.Z]
+export function createRandomCell(): CellType {
+  return cellTypes[Math.floor(Math.random() * cellTypes.length)]
 }
 
 export function initialState(): GameState {
   const size = (TILES_BUFFER_HEIGHT + TILES_HEIGHT) * TILES_WIDTH
-  const field: Array<Cell | null> = new Array(size)
+  const field: GameField = new Array(size)
   for (let i = 0; i < size; i++) {
     field[i] = null
   }
 
-  return {
+  return Object.freeze({
     active: null,
-    field
-  }
+    ghost: null,
+    field: Object.freeze(field)
+  })
 }
 
 export default GameState

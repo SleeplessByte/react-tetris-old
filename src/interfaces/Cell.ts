@@ -10,16 +10,5 @@ export const enum CellType {
   L = 7
 }
 
-export const enum CellState {
-  None      = 0,
-  Active    = 1,
-  InActive  = 2,
-  Ghost     = 3
-}
-
-export interface Cell {
-  type: CellType
-  state: CellState
-}
-
+export type Cell = CellType | null
 export default Cell

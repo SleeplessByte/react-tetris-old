@@ -1,11 +1,13 @@
 import { Component, createElement } from 'react'
 import { connect } from 'react-redux'
 import { tick } from 'store/time/actions'
-import { sliceGameStateFrame } from 'store/game/selectors'
+import { sliceTimeStateFrame, sliceTimeStateFrameLength, sliceTimeStateActive, sliceTimeStateT0 } from 'store/time/selectors'
 import StoreState, { StoreDispatch } from 'store/state'
-import './performance.now.polyfill'
+import 'performance.now.polyfill'
 
 const MS_IN_S = 1000
+const __DROP_RENDER_FRAMES__ = false
+const __DROP_LOGIC_FRAMES__ = true
 
 export interface TimeManipulationProps {}
 
@@ -13,18 +15,24 @@ interface ConnectedTimeManipulationProps extends TimeManipulationProps {
   active: boolean
   frame: number
   frameLength: number
-  tick(): void
+  t0: number
+  tick(t1: number): void
 }
 
 interface TimeManipulationState {
   fps: number
 }
 
+const fpsProps = {
+  style: {
+    marginLeft: 16
+  }
+}
+
 export class TimeManipulation extends Component<ConnectedTimeManipulationProps, TimeManipulationState> {
 
   private tickId: number | undefined
   private mounted: boolean
-  private t0: number
   private dt: number
 
   private tfps0: number
@@ -46,8 +54,7 @@ export class TimeManipulation extends Component<ConnectedTimeManipulationProps, 
   }
 
   componentDidMount() {
-    this.t0 = performance.now()
-    this.tfps0 = this.t0
+    this.tfps0 = this.props.t0
     this.dt = 0
     this.dframes = 0
     this.mounted = true
@@ -83,41 +90,48 @@ export class TimeManipulation extends Component<ConnectedTimeManipulationProps, 
     }
 
     if (!this.props.active) {
-      this.t0 = t1
       this.requestTick()
       return
     }
 
-    // Instead of dropping logic frames, keep executing until its up to date
-    let dt = (t1 - this.t0) + this.dt
+    let dt = (t1 - this.props.t0) + this.dt
     while (dt > this.props.frameLength) {
       this.dt = dt - this.props.frameLength
-      this.t0 = t1
 
-      dt -= this.props.frameLength
-      this.props.tick()
+      if (__DROP_RENDER_FRAMES__) {
+        // Instead of dropping logic frames, keep executing until its up to date
+        dt -= this.props.frameLength
+      } else if (__DROP_LOGIC_FRAMES__) {
+        // Instead of dropping render frames, simply act like the game was paused
+        dt %= this.props.frameLength
+      } else {
+        // Drop both
+        dt = 0
+      }
+      this.props.tick(t1)
     }
 
     this.requestTick()
   }
 
   render() {
-    return createElement('p', {}, `${this.state.fps} fps`)
+    return createElement('section', fpsProps, `${this.state.fps} fps`)
   }
 }
 
 function mapStateToProps(state: StoreState, ownProps: TimeManipulationProps) {
   return {
-    active: true,
-    frame: sliceGameStateFrame(state),
-    frameLength: 500,
+    active: sliceTimeStateActive(state),
+    frame: sliceTimeStateFrame(state),
+    frameLength: sliceTimeStateFrameLength(state),
+    t0: sliceTimeStateT0(state),
     ...ownProps
   }
 }
 
 function mapDispatchToProps(dispatch: StoreDispatch) {
   return {
-    tick: () => { dispatch(tick()) }
+    tick: (t1: number) => { dispatch(tick(t1)) }
   }
 }
 

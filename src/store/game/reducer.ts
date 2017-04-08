@@ -1,131 +1,115 @@
-import { initialState, GameState, Cell, CellState } from './state'
-import { getCell, isPositionFree, isRowFilled } from './selectors'
+import {
+  initialState,
+  GameState,
+  GameField,
+  GameFieldState,
+  Cell,
+  CellType,
+  Tetromino
+} from './state'
+
+import tetrominoFactory from 'store/generator/tetrominoFactory'
 
 import {
   GameAction,
-  ACTION_FILL,
+
+  ACTION_UPDATE_GHOST,
+  ACTION_SPAWN_ACTIVE,
+  ACTION_UPDATE,
+  ACTION_MOVE_ACTIVE,
+  ACTION_FALL_ACTIVE,
+  ACTION_SETTLE_ACTIVE,
+  ACTION_ROTATE_ACTIVE
 } from './actions'
 
-import {
-  TickAction,
-  ACTION_TICK
-} from '../time/actions'
-
-import { TILES_WIDTH, TILES_BUFFER_HEIGHT, TILES_HEIGHT } from 'config'
+import { TILES_WIDTH } from 'config'
 
 declare const __DEV__: boolean
 
-function fillCell(state: GameState, props: { x: number, y: number, cell: Cell | null }): GameState {
-  state.field[props.y * TILES_WIDTH + props.x] = props.cell
-  return state
+function fillCell(field: GameField, props: { x: number, y: number, cell: Cell }): GameField {
+  const i = props.y * TILES_WIDTH + props.x
+  if (i - 1 < field.length) {
+    field[i] = props.cell
+  }
+  return field
 }
 
-function moveCellDown(state: GameState, props: { x: number, y: number }): GameState {
-  const { x, y } = props
-  const cell = getCell(state, props)
-  if (__DEV__ && !cell) {
-    console.warn('Tried to move non existing cell', props)
-    return state
-  }
-  state = fillCell(state, { x, y, cell: null })
-  return fillCell(state, { x, y: y - 1, cell })
+function spawnActive(type: CellType): Readonly<Tetromino> | null {
+  return Object.freeze(tetrominoFactory(type))
 }
 
-function settleCell(state: GameState, props: { x: number, y: number }): GameState {
-  const cell = getCell(state, props)
-  if (__DEV__ && (!cell || cell.state !== CellState.Active)) {
-    console.warn('Tried to settle cell that could not be settled', cell)
-    return state
-  }
-  (cell as Cell).state = CellState.InActive
-  return state
-}
-
-function removeRows(state: GameState, ys: number[]): GameState {
-  switch (ys.length) {
-    case 0:
-      return state
-    case 1:
-      return removeRow(state, ys[0])
-  }
-
-  const field: Array<Cell | null> = []
-  for (let y = 0; y < TILES_HEIGHT + TILES_BUFFER_HEIGHT; y++) {
-    if (ys.indexOf(y) >= 0 ) {
-      continue
+function moveActive(state: GameState, props: { dx: number, dy: number }): Readonly<Tetromino> | null {
+  const { active } = state
+  if (!active) {
+    if (__DEV__) {
+      console.error('[invariant] tried to move active but there was none', props)
     }
-    const row = state.field.slice(y * TILES_WIDTH, y * TILES_WIDTH + TILES_WIDTH)
-    field.push(...row)
+    return null
   }
 
-  const removedCount = TILES_WIDTH * ys.length
-  for (let i = 0; i < removedCount; i++) {
-    field.push(null)
-  }
-
-  console.log(state.field.length, field.length)
-
-  state.field = field
-  return state
+  return Object.freeze({ ...active, x0: active.x0 + props.dx, y0: active.y0 + props.dy })
 }
 
-function removeRow(state: GameState, y: number): GameState {
-  const until = Math.max(0, y * TILES_WIDTH)
-  const after = until + TILES_WIDTH
-  const insert = []
-  for (let i = 0; i < TILES_WIDTH; i++) {
-    insert.push(null)
+function settleActive(state: GameState): Partial<GameState> {
+  const { active } = state
+  if (!active) {
+    if (__DEV__) {
+      console.error('[invariant] tried to settle active but there was none')
+    }
+    return {}
   }
 
-  state.field = state.field.slice(0, until).concat(state.field.slice(after), insert)
-  return state
-}
-
-function tick(state: GameState) {
-  const row: boolean[] = []
-
-  for (let x = 0; x < TILES_WIDTH; x++) {
-    row.push(true)
-  }
-
-  // Make all active blocks fall
-  for (let y = 0; y < (TILES_HEIGHT + TILES_BUFFER_HEIGHT); y++) {
-    for (let x = 0; x < TILES_WIDTH; x++) {
-      const position = { x, y }
-      const cell = getCell(state, position)
-      if (!cell || cell.state !== CellState.Active) {
-        row[x] = true
-        continue
-      }
-
-      if (row[x] && isPositionFree(state, { x, y: y - 1 })) {
-        state = moveCellDown(state, position)
-      } else {
-        state = settleCell(state, position)
-        row[x] = false
+  // Copy active to field
+  let field = state.field.slice()
+  const { width, height, y0, x0, cells } = active
+  const checkProps = { x: -1, y: -1, cell: null as Cell }
+  for (let _y = 0; _y < height; _y++) {
+    checkProps.y = y0 + _y
+    for (let _x = 0; _x < width; _x++) {
+      checkProps.x = x0 + _x
+      checkProps.cell = cells[_y * width + _x]
+      if (checkProps.cell) {
+        field = fillCell(field, checkProps)
       }
     }
   }
 
-  // Remove settled full rows
-  const remove: number[] = []
-  for (let y = 0; y < (TILES_HEIGHT + TILES_BUFFER_HEIGHT); y++) {
-    if (!isRowFilled(state, { y })) {
-      continue
-    }
-
-    remove.push(y)
+  return {
+    active: null,
+    field: Object.freeze(field)
   }
-
-  return removeRows(state, remove)
 }
 
-export function gameState(state = initialState(), action: GameAction | TickAction): GameState {
+function updateField(field: GameField): GameFieldState {
+  return Object.freeze(field)
+}
+
+export function gameState(state = initialState(), action: GameAction): GameState {
   switch (action.type) {
-    case ACTION_FILL:
-      return { ...fillCell(state, action.payload) }
-    case ACTION_TICK:
-      return { ...tick(state) }
+    case ACTION_MOVE_ACTIVE:
+    case ACTION_FALL_ACTIVE:
+      if (__DEV__) { console.log(`[reducer] [game] ${action.type} with movement: ${action.payload.dx}:${action.payload.dy}`) }
+      return Object.freeze({ ...state, active: moveActive(state, action.payload) })
+
+    case ACTION_ROTATE_ACTIVE:
+      if (__DEV__) { console.log(`[reducer] [game] rotated actived`) }
+      return Object.freeze({ ...state, active: Object.freeze(action.payload) })
+
+    case ACTION_UPDATE_GHOST:
+      if (__DEV__) { console.log(`[reducer] [game] update ghost`) }
+      return Object.freeze({ ...state, ghost: Object.freeze(action.payload) })
+
+    case ACTION_SETTLE_ACTIVE:
+      if (__DEV__) { console.log('[reducer] [game] settle active') }
+      return Object.freeze({ ...state, ...settleActive(state) })
+
+    case ACTION_UPDATE:
+      if (__DEV__) { console.log('[reducer] [game] update game field') }
+      return Object.freeze({ ...state, field: updateField(action.payload) })
+
+    case ACTION_SPAWN_ACTIVE:
+      if (__DEV__) { console.log(`[reducer] [game] spawn active with type: ${action.payload}`) }
+      return Object.freeze({ ...state, active: spawnActive(action.payload) })
   }
   return state
 }

@@ -1,9 +1,13 @@
-import gameReducer from './game/reducer'
-import generatorReducer from './generator/reducer'
-import timeReducer from './time/reducer'
+import gameReducer from 'store/game/reducer'
+import generatorReducer from 'store/generator/reducer'
+import timeReducer from 'store/time/reducer'
+import inputReducer from 'store/input/reducer'
+import statsReducer from 'store/stats/reducer'
 
 export default {
   game: gameReducer,
   generator: generatorReducer,
-  time: timeReducer
+  time: timeReducer,
+  input: inputReducer,
+  stats: statsReducer
 }
