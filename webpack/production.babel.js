@@ -15,9 +15,7 @@ browserConfig.plugins.push(
     responseStrategy: 'cache-first',
     updateStrategy: 'changed',
     externals: [
-      'https://fonts.googleapis.com/icon?family=Material+Icons',
-      'https://fonts.googleapis.com/css?family=Noto+Sans:400,700',
-      'https://connect.facebook.net/en_US/sdk.js'
+
     ],
     relativePaths: false,
     AppCache: false,
