@@ -134,7 +134,7 @@
     "redux-devtools": "^3.3",
     "redux-thunk": "^2.2",
     "reselect": "^3.0.0",
-    "rimraf": "^2.6.1",
+    "rimraf": "^2.6.2",
     "rxjs": "^5.2.0",
     "sass-loader": "^6.0.3",
     "serve": "^5.0.3",
