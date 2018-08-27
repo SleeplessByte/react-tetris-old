@@ -55,7 +55,7 @@
     "@types/react-redux": "^4.4.37",
     "@types/sinon": "^1.16.36",
     "@types/webpack": "^2.2.11",
-    "@types/webpack-env": "^1.13.0",
+    "@types/webpack-env": "^1.13.6",
     "argv": "^0.0.2",
     "awesome-typescript-loader": "^3.1.2",
     "babel-core": "^6.24.0",
