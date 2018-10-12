@@ -45,7 +45,7 @@
     "@types/chai": "^3.4.35",
     "@types/cheerio": "^0.22.0",
     "@types/enzyme": "^2.7.5",
-    "@types/history": "^4.5.0",
+    "@types/history": "^4.7.1",
     "@types/jest": "^19.2.2",
     "@types/mocha": "^2.2.40",
     "@types/react": "^15.0",
