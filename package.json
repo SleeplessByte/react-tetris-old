@@ -127,7 +127,7 @@
     "react-loadable": "^3.0.1",
     "react-motion": "^0.4.7",
     "react-rating": "^0.6.5",
-    "react-redux": "^5.0",
+    "react-redux": "^6.0.0",
     "react-router-dom": "^4.0.0",
     "react-router-redux": "next",
     "redux": "^3.6",
